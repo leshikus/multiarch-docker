@@ -1,15 +1,13 @@
-FROM ubuntu:latest as builder
-RUN apt-get update && apt-get install -y gcc libc6-dev && rm -rf /var/lib/apt/lists/*
+FROM ubuntu:latest AS builder
+RUN apt-get update && apt-get install -y make gcc && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY hello.c .
-RUN gcc -o HelloWorld hello.c
+COPY c-app/*.c c-app/Makefile .
+RUN make
 
 FROM ubuntu:latest
 RUN apt-get update && apt-get install -y libc6 && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/HelloWorld /HelloWorld
-COPY --from=builder /etc/passwd /etc/passwd
-RUN mkdir /tmp
+COPY --from=builder /app/main /usr/bin/main
 
-ENTRYPOINT ["/HelloWorld"]
+ENTRYPOINT ["/usr/bin/main"]

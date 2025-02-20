@@ -1,15 +1,42 @@
+on:
+  workflow_dispatch:
+  push:
+
+env:
+  DOCKER_USERNAME: dataved
+  PLATFORM1: linux/amd64
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - uses: actions/checkout@v4
+        # Adding a name: to a standard action does not actually improve the log readability
+        # why would one name a standard thing with different words
+      - uses: actions/checkout@v4
+        with:
+          repository: leshikus/c-app
+          path: c-app
+        # Cross-compiling:
+        #   + Faster
+        #   + No need fully emulated environment
+        #   - Dependency hell
+        # vs QEMU Emulating:
+        #   + Debugging natively is simpler
+        #   + Possible to run tests
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+        with:
+          platform: ${{ env.PLATFORM1 }}
+          # linux/amd64,linux/arm64
+
       - name: Build and Push
         run: |
           docker buildx create --use
-          docker buildx build --platform linux/amd64,linux/arm64 -t myrepo/helloworld:latest --push .
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ env.DOCKER_USERNAME }} --password-stdin
+          docker buildx build -t ${{ env.DOCKER_USERNAME }}/c-app:latest --push .
+          docker buildx imagetools inspect ${{ env.DOCKER_USERNAME }}/c-app:latest
+
+      - name: Test
+        run: |
+          docker run --platform ${{ env.PLATFORM1 }} ${{ env.DOCKER_USERNAME }}/c-app:latest
