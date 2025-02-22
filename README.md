@@ -1,5 +1,7 @@
 # Multiarch Docker Example
 
+Build a minimal docker image to run a C application.
+
 ## How to verify the remote image?
 Check Validate step
 * buildx itself does not load the image into the docker, we inspect buildx cache to get the hash
