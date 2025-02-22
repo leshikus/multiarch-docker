@@ -1,7 +1,7 @@
 # Multiarch Docker Example
 
 ## How to verify the remote image?
-Check Validate step
+Check [Validate]() step
 * buildx itself does not load the image into the docker, we inspect buildx cache to get the hash
 * we pull the image from the registry and get another hash
 * we compare the hashes
@@ -16,8 +16,10 @@ Check PLATFORMS entries in the [`build.yml`](.github/workflows/build.yml)
 * Possible to run tests
 * Dependencies easier to install
 
+It's important to consider which build mode is supported better (or is a default one) for a particular project.
+
 ## CI/CD
-Please check [`build.yml`](.github/workflows/build.yml)
+Please check [`build.yml`](.github/workflows/build.yml). It's possible to speed up the build further by using Github cache for buildx cache.
 
 ## Pros and Cons of Squashing Layers in Docker
 

@@ -4,7 +4,7 @@ on:
 
 env:
   DOCKER_USERNAME: dataved
-  PLATFORMS: linux/amd64,linux/arm64
+  PLATFORMS: linux/amd64
   # linux/amd64,linux/arm64
 
 jobs:
