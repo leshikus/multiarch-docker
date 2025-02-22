@@ -5,9 +5,10 @@ WORKDIR /app
 COPY c-app/*.c c-app/Makefile .
 RUN make
 
-FROM ubuntu:latest
-RUN apt-get update && apt-get install -y libc6 && rm -rf /var/lib/apt/lists/*
+FROM scratch
 
 COPY --from=builder /app/main /usr/bin/main
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /tmp /tmp
 
 ENTRYPOINT ["/usr/bin/main"]
