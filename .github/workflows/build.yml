@@ -1,0 +1,45 @@
+on:
+  workflow_dispatch:
+  push:
+
+env:
+  DOCKER_USERNAME: dataved
+  PLATFORMS: linux/amd64,linux/arm64
+  # linux/amd64,linux/arm64
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # Adding a name: to a standard action does not actually improve the log readability
+        # why would one name a standard thing with different words
+      - uses: actions/checkout@v4
+        with:
+          repository: leshikus/c-app
+          path: c-app
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push
+        run: |
+          docker buildx create --use
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ env.DOCKER_USERNAME }} --password-stdin
+          docker buildx build --platform ${{ env.PLATFORMS }} -t ${{ env.DOCKER_USERNAME }}/c-app:latest --push .
+          docker buildx imagetools inspect ${{ env.DOCKER_USERNAME }}/c-app:latest | tee image-inspect.txt
+
+      - name: Validate
+        run: |
+          docker pull ${{ env.DOCKER_USERNAME }}/c-app:latest | tee image-pull.txt
+          hash_inspect=$(awk '/^Digest: / { print $2 }' image-inspect.txt)
+          hash_pull=$(awk '/^Digest: / { print $2 }' image-pull.txt)
+          test "$hash_inspect" = "$hash_pull"
+
+      - name: Test
+        run: |
+          platforms=$(echo ${{ env.PLATFORMS }} | tr ',' ' ')
+          set -vx
+          for p in $platforms
+          do
+            docker run --platform $p ${{ env.DOCKER_USERNAME }}/c-app:latest
+          done
